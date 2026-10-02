@@ -1,0 +1,1 @@
+GIGACHAT_MODEL = "GigaChat-2"
