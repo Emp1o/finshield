@@ -6,8 +6,12 @@ __pycache__/
 
 chroma_db/ 
 
-pilot/
+data/ 
 
-eval/adversarial.json
+pilot/ 
 
-eval/guard_log.csv
+eval/adversarial.json 
+
+eval/guard_log.csv 
+
+eval/accuracy_log.csv 

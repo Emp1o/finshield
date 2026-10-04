@@ -10,6 +10,8 @@ langchain-huggingface
 
 langchain-gigachat 
 
+langchain-openai 
+
 langgraph 
 
 sentence-transformers 
@@ -21,3 +23,7 @@ aiogram
 python-dotenv 
 
 pandas 
+
+numpy 
+
+matplotlib 

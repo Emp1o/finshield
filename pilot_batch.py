@@ -9,7 +9,7 @@ from langchain_gigachat import GigaChat
 
 load_dotenv()
 
-QUERIES_PATH = "pilot/queries.json"     # закрытый набор запросов, не в репозитории
+QUERIES_PATH = "pilot/queries.json"
 RESULTS_PATH = "pilot/pilot_results.csv"
 
 if not os.path.exists(QUERIES_PATH):
@@ -30,7 +30,6 @@ llm = GigaChat(
 
 os.makedirs("pilot", exist_ok=True)
 
-# utf-8-sig и разделитель ";" — чтобы файл нормально открылся в Excel с русскими буквами
 with open(RESULTS_PATH, "w", newline="", encoding="utf-8-sig") as f:
     writer = csv.writer(f, delimiter=";")
     writer.writerow(["№", "категория", "запрос", "finish_reason", "начало ответа", "разметка"])
@@ -45,6 +44,6 @@ with open(RESULTS_PATH, "w", newline="", encoding="utf-8-sig") as f:
 
         writer.writerow([number, category, query, finish, text, ""])
         print(f"{number:>2} [{category}] finish_reason={finish}")
-        time.sleep(2)   # пауза, чтобы не упереться в ограничение частоты запросов
+        time.sleep(2)
 
 print("Готово. Результаты:", RESULTS_PATH)

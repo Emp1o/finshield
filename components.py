@@ -8,6 +8,8 @@ from langchain_gigachat import GigaChat
 
 from langchain_huggingface import HuggingFaceEmbeddings 
 
+from langchain_openai import ChatOpenAI 
+
 from sentence_transformers import CrossEncoder 
 
   
@@ -26,7 +28,7 @@ def get_embeddings():
 
         model_name=config.EMBEDDING_MODEL, 
 
-        encode_kwargs={"normalize_embeddings": True},  # нормализация: косинус = скалярное произведение 
+        encode_kwargs={"normalize_embeddings": True}, 
 
     ) 
 
@@ -57,6 +59,20 @@ def get_reranker():
 @lru_cache 
 
 def get_llm(): 
+
+    if config.LLM_PROVIDER == "local": 
+
+        return ChatOpenAI( 
+
+            base_url=config.LOCAL_BASE_URL, 
+
+            api_key="lm-studio", 
+
+            model=config.LOCAL_MODEL, 
+
+            temperature=0, 
+
+        ) 
 
     return GigaChat( 
 
