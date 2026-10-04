@@ -22,4 +22,4 @@ llm = GigaChat(
 
 ) 
 
-print(llm.invoke("Привет! Объясни в одном предложении, что такое RAG.").content) 
+print(llm.invoke("Привет! Что такое «безопасный счет» и почему это всегда обман?").content) 
