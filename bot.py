@@ -12,13 +12,35 @@ from aiogram.types import Message
 
 import config 
 
-from rag import answer, source_name 
+from rag import answer, source_name
+
+import csv
+import os
+from datetime import datetime
+
+from rag import NO_ANSWER
+
+LOG_PATH = "logs/questions.csv"
+
 
   
 
 dp = Dispatcher() 
 
-  
+def log_question(question: str, result: dict):
+    """Append an anonymous question record to the log."""
+    os.makedirs("logs", exist_ok=True)
+    is_new = not os.path.exists(LOG_PATH)
+    with open(LOG_PATH, "a", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f, delimiter=";")
+        if is_new:
+            writer.writerow(["time", "question", "answered", "top_score"])
+        writer.writerow([
+            datetime.now().isoformat(timespec="seconds"),
+            question,
+            result["answer"] != NO_ANSWER,
+            result["top_score"],
+        ]) 
 
   
 
@@ -30,7 +52,9 @@ async def start(message: Message):
 
         "Привет! Я помогаю распознать финансовых мошенников и подсказываю, что делать, " 
 
-        "по официальным материалам Банка России и банков. Опишите ситуацию или задайте вопрос." 
+        "по официальным материалам Банка России и банков. Опишите ситуацию или задайте вопрос."
+
+        "Вопросы сохраняются анонимно, чтобы улучшать бота." 
 
     ) 
 
@@ -58,9 +82,9 @@ async def handle_question(message: Message):
 
         await message.answer("Не получилось ответить, попробуйте чуть позже.") 
 
-        return 
+        return
 
-  
+    log_question(message.text, result)
 
     sources = "\n".join(source_name(d) for d in result["cited"]) 
 
