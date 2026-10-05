@@ -1,1 +1,9 @@
+.venv/
+.env
+.git/
+__pycache__/
+pilot/
 logs/
+eval/adversarial.json
+eval/guard_log.csv
+eval/accuracy_log.csv

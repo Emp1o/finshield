@@ -7,7 +7,11 @@ from langchain_core.prompts import ChatPromptTemplate
 import config
 from components import get_llm, get_reranker, get_vectorstore
 
-NO_ANSWER = "В документах нет ответа на этот вопрос."
+NO_ANSWER = (
+    "В документах нет ответа на этот вопрос. "
+    "Если вы столкнулись с мошенничеством прямо сейчас, прекратите разговор "
+    "и позвоните в свой банк по номеру с обратной стороны карты."
+)
 
 PROMPT = ChatPromptTemplate.from_messages([
     ("system",
