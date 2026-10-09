@@ -230,13 +230,10 @@
     "type": "no_answer",
     "reference": ""
   },
-  {
-    "question": "Какой номер горячей линии у моего банка?",
-    "source": null,
-    "page": null,
-    "type": "no_answer",
-    "reference": ""
-  },
+  {"question": "Какой номер горячей линии у моего банка?",
+ "source": ["bez_plastic_card.pdf", "obnovlenie_banknot.pdf", "mejdunarodniy_schet.pdf", "obman_voen.pdf"],
+ "page": 1, "type": "answerable",
+ "reference": "Звонить в свой банк по номеру, указанному на его официальном сайте или на оборотной стороне банковской карты."},
   {
     "question": "Сколько будет 17 умножить на 3?",
     "source": null,
@@ -278,5 +275,19 @@
     "page": null,
     "type": "off_topic",
     "reference": ""
+  },
+  {
+    "question": "Мне позвонили из Банка России. Что делать?",
+    "source": "cbr_lgesotrudniki.pdf",
+    "page": 1,
+    "type": "answerable",
+    "reference": "Банк России не взаимодействет с физическими лицами. Никогда не отвечайте на подобные звонки!"
+  },
+  {
+    "question": "Для сохранности денег предложили перечислить их на специальный безопасный счет. Что делать?",
+    "source": "spec_schet_banka.pdf",
+    "page": 1,
+    "type": "answerable",
+    "reference": "Банк России не взаимодействет с физическими лицами. Никогда не отвечайте на подобные звонки!"
   }
 ]
