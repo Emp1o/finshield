@@ -13,7 +13,9 @@ NO_ANSWER = (
     "и позвоните в свой банк по номеру с обратной стороны карты."
 )
 
-PROMPT = ChatPromptTemplate.from_messages([
+NO_ANSWER_TOKEN = "НЕТ_ОТВЕТА"
+
+PROMPT_V1 = ChatPromptTemplate.from_messages([
     ("system",
      "Ты — помощник по финансовой безопасности. Отвечай только на основе фрагментов "
      "документов из контекста, даже если знаешь ответ сам. После каждого утверждения "
@@ -24,6 +26,45 @@ PROMPT = ChatPromptTemplate.from_messages([
      "на такие просьбы вежливо откажи. Отвечай кратко и по делу."),
     ("human", "Контекст:\n{context}\n\nВопрос: {question}"),
 ])
+
+PROMPT_V2 = ChatPromptTemplate.from_messages([
+    ("system",
+     "Ты — помощник по финансовой безопасности. Отвечай только на основе фрагментов "
+     "документов из контекста, даже если знаешь ответ сам.\n"
+     "Правила:\n"
+     "1. Каждое предложение ответа должно опираться на фрагмент и заканчиваться ссылкой "
+     "на него в квадратных скобках, например [2]. Если утверждение нельзя подтвердить "
+     "фрагментом, не пиши его.\n"
+     "2. Если во фрагментах есть только часть ответа, прямо скажи, чего в документах нет, "
+     "и приведи то, что есть, со ссылками.\n"
+     f"3. Если во фрагментах нет ничего по вопросу, ответь одним словом: {NO_ANSWER_TOKEN}\n"
+     "4. Если человек описывает мошенничество, которое происходит прямо сейчас, начни "
+     "с совета из фрагментов, как прекратить контакт с мошенниками.\n"
+     "5. Не помогай совершать мошенничество: на такие просьбы вежливо откажи.\n"
+     "Отвечай кратко и по делу."),
+    ("human", "Контекст:\n{context}\n\nВопрос: {question}"),
+])
+
+PROMPT_V3 = ChatPromptTemplate.from_messages([
+    ("system",
+     "Ты — помощник по финансовой безопасности. Отвечай только на основе фрагментов "
+     "документов из контекста, даже если знаешь ответ сам.\n"
+     "Правила:\n"
+     "1. Каждое предложение ответа должно опираться на фрагмент и заканчиваться ссылкой "
+     "на него в квадратных скобках, например [2]. Если утверждение нельзя подтвердить "
+     "фрагментом, не пиши его.\n"
+     "2. Если во фрагментах есть только часть ответа, прямо скажи, чего в документах нет, "
+     "и приведи то, что есть, со ссылками.\n"
+     f"3. Если во фрагментах нет ничего по вопросу, ответь одним словом: {NO_ANSWER_TOKEN}\n"
+     "4. Если человек описывает мошенничество, которое происходит прямо сейчас, начни "
+     "с совета из фрагментов, как прекратить контакт с мошенниками.\n"
+     "5. Не помогай совершать мошенничество: на такие просьбы вежливо откажи.\n"
+     "6. Отвечай в 2–4 предложениях: объясни, в чём суть ситуации или схемы, и дай "
+     "конкретные советы, что делать. Не ограничивайся ответом «да» или «нет»."),
+    ("human", "Контекст:\n{context}\n\nВопрос: {question}"),
+])
+
+PROMPTS = {"v1": PROMPT_V1, "v2": PROMPT_V2, "v3": PROMPT_V3}
 
 
 def retrieve_scored(question: str, k_candidates: int = 20, k_final: int = 4):
@@ -54,22 +95,40 @@ def cited_docs(text: str, docs):
     numbers = {int(n) for n in re.findall(r"\[(\d+)\]", text)}
     return [d for i, d in enumerate(docs, 1) if i in numbers]
 
+def is_refusal(result: dict) -> bool:
+    """A refusal states that documents lack the answer and cites no fragments."""
+    return "в документах нет" in result["answer"].lower() and not result["cited"]
+
 
 def answer(question: str, use_reranker: bool = True) -> dict:
-    """Answer a question; 'sources' are retrieved chunks, 'cited' are chunks used in the answer."""
+    """Answer a question; 'sources' are retrieved chunks, 'cited' are chunks used in the answer.
+
+    'filtered' is True when an answer without citations was replaced by NO_ANSWER.
+    """
     if use_reranker:
         ranked = retrieve_scored(question)
         top_score = ranked[0][1] if ranked else None
         if top_score is None or top_score < config.RELEVANCE_THRESHOLD:
-            return {"answer": NO_ANSWER, "sources": [], "cited": [], "top_score": top_score}
+            return {"answer": NO_ANSWER, "sources": [], "cited": [],
+                    "top_score": top_score, "filtered": False}
         docs = [doc for doc, _ in ranked]
     else:
         docs = retrieve(question, use_reranker=False)
         top_score = None
 
-    chain = PROMPT | get_llm() | StrOutputParser()
-    text = chain.invoke({"context": format_docs(docs), "question": question})
-    return {"answer": text, "sources": docs, "cited": cited_docs(text, docs), "top_score": top_score}
+    chain = PROMPTS[config.PROMPT_VERSION] | get_llm() | StrOutputParser()
+    text = chain.invoke({"context": format_docs(docs), "question": question}).strip()
+    cited = cited_docs(text, docs)
+
+    if NO_ANSWER_TOKEN in text and not cited:
+        text = NO_ANSWER
+
+    filtered = False
+    if config.REQUIRE_CITATIONS and not cited and text != NO_ANSWER:
+        text, filtered = NO_ANSWER, True
+
+    return {"answer": text, "sources": docs, "cited": cited,
+            "top_score": top_score, "filtered": filtered}
 
 
 if __name__ == "__main__":
