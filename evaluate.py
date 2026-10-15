@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import time
 
 import numpy as np
 import pandas as pd
@@ -59,6 +60,20 @@ def is_yes(verdict):
     return verdict.strip().lower().startswith("да")
 
 
+def with_retry(fn, *args, attempts=4, base_delay=2, **kwargs):
+    """Call fn, retrying with exponential backoff; re-raise after the last attempt."""
+    for attempt in range(1, attempts + 1):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            if attempt == attempts:
+                raise
+            delay = base_delay * 2 ** (attempt - 1)
+            print(f"{type(e).__name__}: {e} — повтор {attempt}/{attempts - 1} через {delay} с",
+                  file=sys.stderr)
+            time.sleep(delay)
+
+
 def evaluate_answers():
     """Faithfulness and false refusals on answerable questions, correct refusals on the rest.
 
@@ -67,15 +82,16 @@ def evaluate_answers():
     judge = get_judge()
     faithful, false_refusals, refusals, rows = [], [], [], []
     for ex in EVAL:
-        result = answer(ex["question"])
+        result = with_retry(answer, ex["question"])
         refused = is_refusal(result)
         row = {"question": ex["question"], "type": ex.get("type", ""),
-               "refused": refused, "answer": result["answer"], "judge": "", "context": ""}
+       "refused": refused, "top_score": result.get("top_score"),
+       "answer": result["answer"], "judge": "", "context": ""}
         if ex["source"]:
             false_refusals.append(1 if refused else 0)
             if not refused:
                 context = format_docs(result["sources"])
-                verdict = judge.invoke(JUDGE_PROMPT.format(
+                verdict = with_retry(judge.invoke, JUDGE_PROMPT.format(
                     context=context, answer=result["answer"])).content.strip()
                 faithful.append(1 if is_yes(verdict) else 0)
                 row.update(judge=verdict, context=context)

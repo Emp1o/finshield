@@ -86,4 +86,15 @@ def get_llm():
 
         timeout=60, 
 
+    )
+
+@lru_cache
+def get_judge():
+    return GigaChat(
+        credentials=config.GIGACHAT_CREDENTIALS,
+        scope="GIGACHAT_API_PERS",
+        model=config.JUDGE_MODEL,
+        verify_ssl_certs=False,
+        timeout=60,
+        temperature=0,
     ) 
