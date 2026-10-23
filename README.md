@@ -127,7 +127,7 @@ Faithfulness считает судья: ему дают найденные фр�
 
 ## Как запустить
 
-Нужен Python 3. Установка проверена на Python 3.12.3.
+Проект проверен на Python 3.13, версии зависимостей зафиксированы.
 
 ```bash
 python -m venv .venv
@@ -135,7 +135,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Версии в `requirements.txt` зафиксированы как `пакет==версия`. На Python 3.12.3 чистая установка проходит, после неё `import rag, evaluate` выполняется. Пакет `gigachat` нужен скрипту `list_models.py`.
+Проект проверен на Python 3.13 с зафиксированными версиями в `requirements.txt`. Пакет `gigachat` нужен скрипту `list_models.py`.
 
 Дальше скопируйте `.env.example` в `.env` и заполните `GIGACHAT_CREDENTIALS` и `TELEGRAM_TOKEN`. PDF положите в `data/` под именами из `data/SOURCES.md` (сами файлы в git не входят) и соберите индекс.
 
