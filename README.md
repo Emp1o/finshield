@@ -2,10 +2,6 @@
 
 Telegram-ассистент для людей, которые хотят проверить подозрительный звонок, СМС или письмо по открытым материалам Банка России и банков, а не по памяти модели.
 
-![Скриншот диалога](docs/screenshot.png)
-
-Скриншот диалога Максим кладёт в `docs/screenshot.png`: ссылка выше уже ведёт на этот путь.
-
 ## Как это работает
 
 PDF из `data/` проходят такой конвейер (числа сверены с `config.py` и значениями по умолчанию в `rag.py`):
@@ -131,7 +127,7 @@ Faithfulness считает судья: ему дают найденные фр�
 
 ## Как запустить
 
-Нужен Python 3. Команды установки проверены на Python 3.12.3. Версию интерпретатора репозиторий не фиксирует: её нужно сверить со своим окружением.
+Нужен Python 3. Установка проверена на Python 3.12.3.
 
 ```bash
 python -m venv .venv
@@ -139,9 +135,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Версии в `requirements.txt` зафиксированы как `пакет==версия` и ставятся в чистом venv на Python 3.12.3: после установки `import rag, evaluate` проходит. Это не снимок `pip freeze` с рабочей машины Максима. Перед защитой сверьте файл со своим `pip freeze` и замените версии, если они отличаются. Пакет `gigachat` нужен скрипту `list_models.py`.
+Версии в `requirements.txt` зафиксированы как `пакет==версия`. На Python 3.12.3 чистая установка проходит, после неё `import rag, evaluate` выполняется. Пакет `gigachat` нужен скрипту `list_models.py`.
 
-Дальше скопируйте `.env.example` в `.env` и заполните `GIGACHAT_CREDENTIALS` и `TELEGRAM_TOKEN`. PDF положите в `data/` (имена и пометки о ссылках — в `data/SOURCES.md`; сами PDF в git не входят).
+Дальше скопируйте `.env.example` в `.env` и заполните `GIGACHAT_CREDENTIALS` и `TELEGRAM_TOKEN`. PDF положите в `data/` под именами из `data/SOURCES.md` (сами файлы в git не входят) и соберите индекс.
 
 ```bash
 python ingest.py
@@ -189,8 +185,8 @@ GigaChat(
 - `requirements.txt` — прямые зависимости с версиями.
 - `.env.example` — имена переменных `GIGACHAT_CREDENTIALS` и `TELEGRAM_TOKEN`.
 - `.gitignore` — секрет, PDF, индекс, логи, служебные файлы macOS.
-- `.dockerignore` — черновик исключений для образа; `Dockerfile` в репозитории нет.
-- `data/SOURCES.md` — имена PDF, которые ждут в `data/`; ссылки помечены, где их нет в репозитории.
+- `.dockerignore` — список исключений для образа; `Dockerfile` в репозитории нет.
+- `data/SOURCES.md` — 17 PDF Банка России: имя файла, название, ссылка на страницу.
 - `tests/test_mask.py` — тесты маскирования карт, телефонов и коротких чисел.
 - `eval/experiments.md` — журнал экспериментов и план.
 - `eval/error_analysis.md` — разбор десяти ошибок.
