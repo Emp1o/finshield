@@ -18,7 +18,7 @@ def collect():
     judge = get_judge()
     rows = []
     for q in questions:
-        result = answer(q["question"])
+        result = answer(q["question"], preshow_judge=False)
         if is_refusal(result):
             continue
         context = format_docs(result["sources"])

@@ -6,6 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 import config
 from components import get_llm, get_reranker, get_vectorstore
+from preshow import apply_preshow, check_draft
 
 NO_ANSWER = (
     "В документах нет ответа на этот вопрос. "
@@ -100,17 +101,34 @@ def is_refusal(result: dict) -> bool:
     return "в документах нет" in result["answer"].lower() and not result["cited"]
 
 
-def answer(question: str, use_reranker: bool = True) -> dict:
-    """Answer a question; 'sources' are retrieved chunks, 'cited' are chunks used in the answer.
+def _pack(text, sources, cited, top_score, filtered, judge_pass=None,
+          judge_reason="", judge_decision="skipped") -> dict:
+    return {
+        "answer": text,
+        "sources": sources,
+        "cited": cited,
+        "top_score": top_score,
+        "filtered": filtered,
+        "judge_pass": judge_pass,
+        "judge_reason": judge_reason,
+        "judge_decision": judge_decision,
+    }
 
-    'filtered' is True when an answer without citations was replaced by NO_ANSWER.
+
+def answer(question: str, use_reranker: bool = True, preshow_judge: bool | None = None) -> dict:
+    """Ответ на вопрос. sources — найденные фрагменты, cited — те, на которые есть ссылки.
+
+    filtered истинен, если ответ без ссылок заменён на NO_ANSWER.
+    preshow_judge перекрывает PRESHOW_JUDGE. Если судья отклоняет черновик,
+    пользователю уходит NO_ANSWER, а judge_pass становится False.
+    Оценка черновика без этого шага передаёт preshow_judge=False.
     """
+    use_judge = config.PRESHOW_JUDGE if preshow_judge is None else preshow_judge
     if use_reranker:
         ranked = retrieve_scored(question)
         top_score = ranked[0][1] if ranked else None
         if top_score is None or top_score < config.RELEVANCE_THRESHOLD:
-            return {"answer": NO_ANSWER, "sources": [], "cited": [],
-                    "top_score": top_score, "filtered": False}
+            return _pack(NO_ANSWER, [], [], top_score, False)
         docs = [doc for doc, _ in ranked]
     else:
         docs = retrieve(question, use_reranker=False)
@@ -127,8 +145,16 @@ def answer(question: str, use_reranker: bool = True) -> dict:
     if config.REQUIRE_CITATIONS and not cited and text != NO_ANSWER:
         text, filtered = NO_ANSWER, True
 
-    return {"answer": text, "sources": docs, "cited": cited,
-            "top_score": top_score, "filtered": filtered}
+    text, cited, judge_pass, judge_reason, judge_decision = apply_preshow(
+        text,
+        cited,
+        format_docs(docs),
+        enabled=use_judge,
+        checker=lambda context, draft: check_draft(context, draft),
+        refusal_text=NO_ANSWER,
+    )
+    return _pack(text, docs, cited, top_score, filtered,
+                 judge_pass, judge_reason, judge_decision)
 
 
 if __name__ == "__main__":
@@ -138,6 +164,8 @@ if __name__ == "__main__":
             break
         result = answer(q)
         print("\n" + result["answer"])
+        if result["judge_decision"] == "fail":
+            print(f"\n(судья не пропустил черновик: {result['judge_reason']})")
         if result["cited"]:
             print("\nSources:")
             for d in result["cited"]:
