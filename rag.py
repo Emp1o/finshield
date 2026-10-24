@@ -116,12 +116,12 @@ def _pack(text, sources, cited, top_score, filtered, judge_pass=None,
 
 
 def answer(question: str, use_reranker: bool = True, preshow_judge: bool | None = None) -> dict:
-    """Answer a question; 'sources' are retrieved chunks, 'cited' are chunks used in the answer.
+    """Ответ на вопрос. sources — найденные фрагменты, cited — те, на которые есть ссылки.
 
-    'filtered' is True when an answer without citations was replaced by NO_ANSWER.
-    'preshow_judge' overrides PRESHOW_JUDGE. When the judge rejects a draft, the
-    shown answer becomes NO_ANSWER and 'judge_pass' is False. Evaluations that
-    measure the unjudged draft pass preshow_judge=False.
+    filtered истинен, если ответ без ссылок заменён на NO_ANSWER.
+    preshow_judge перекрывает PRESHOW_JUDGE. Если судья отклоняет черновик,
+    пользователю уходит NO_ANSWER, а judge_pass становится False.
+    Оценка черновика без этого шага передаёт preshow_judge=False.
     """
     use_judge = config.PRESHOW_JUDGE if preshow_judge is None else preshow_judge
     if use_reranker:

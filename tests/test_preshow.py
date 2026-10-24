@@ -208,6 +208,9 @@ def test_summarize_before_after_band_and_case_9():
     assert stats["band_n"] == 2
     assert stats["band_pass_before_n"] == 2
     assert stats["band_pass_after_n"] == 0
+    assert stats["band_answerable_n"] == 1
+    assert stats["band_answerable_before_n"] == 1
+    assert stats["band_answerable_after_n"] == 0
     assert stats["answerable_rejected_n"] == 1
     assert stats["judge_rejected_n"] == 2
     assert stats["case_9"] == "fail"
@@ -357,14 +360,20 @@ def test_experiment_row_records_case_9_reject_and_skips_refusals(monkeypatch):
 
 def test_experiment_parse_args():
     experiment = _experiment()
-    paths, strictness = experiment.parse_args([])
+    paths, strictness, runs = experiment.parse_args([])
     assert paths == experiment.DEFAULT_PATHS
     assert strictness is None
-    paths, strictness = experiment.parse_args(["--strictness", "verbatim", "eval/questions.json"])
+    assert runs == 1
+    paths, strictness, runs = experiment.parse_args(
+        ["--strictness", "verbatim", "--runs", "2", "eval/questions.json"]
+    )
     assert paths == ["eval/questions.json"]
     assert strictness == "verbatim"
+    assert runs == 2
     with pytest.raises(SystemExit):
         experiment.parse_args(["--strictness"])
+    with pytest.raises(SystemExit):
+        experiment.parse_args(["--runs", "0"])
 
 
 def test_answer_skips_judge_below_threshold_and_without_citations(monkeypatch):

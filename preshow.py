@@ -49,7 +49,7 @@ PRESHOW_JUDGE_PROMPT = (
 
 
 def strictness_text(name: str | None = None) -> tuple[str, str]:
-    """Return (mode, rule paragraph). Unknown modes raise ValueError."""
+    """Вернуть (режим, абзац правила). Неизвестный режим — ValueError."""
     mode = (name if name is not None else config.PRESHOW_STRICTNESS).strip().lower() or "soft"
     if mode not in STRICTNESS_RULES:
         known = ", ".join(sorted(STRICTNESS_RULES))
@@ -58,9 +58,9 @@ def strictness_text(name: str | None = None) -> tuple[str, str]:
 
 
 def build_preshow_prompt(context: str, answer: str, strictness: str | None = None) -> str:
-    """Fill the pre-show prompt. `strictness` is `soft` or `verbatim`.
+    """Собрать промпт. `strictness` — `soft` или `verbatim`.
 
-    Placeholders are substituted literally so braces inside a chunk are not format fields.
+    Подстановки буквальные: фигурные скобки внутри фрагмента не становятся полями формата.
     """
     _, rule = strictness_text(strictness)
     return (
@@ -82,7 +82,7 @@ def _first_word(text: str) -> str:
 
 
 def parse_preshow_verdict(text: str) -> dict:
-    """Parse a two-line verdict. Unrecognised text fails closed (do not show)."""
+    """Разобрать две строки вердикта. Непонятный текст не показываем."""
     raw = (text or "").strip()
     verdict_text = ""
     reason = ""
@@ -113,7 +113,7 @@ def parse_preshow_verdict(text: str) -> dict:
 
 
 def check_draft(context: str, answer: str, *, judge=None, strictness: str | None = None) -> dict:
-    """Ask the judge whether a draft may be shown. `judge` defaults to get_judge()."""
+    """Спросить судью, можно ли показать черновик. Без `judge` берётся get_judge()."""
     mode, _ = strictness_text(strictness)
     prompt = build_preshow_prompt(context, answer, mode)
     if judge is None:
@@ -126,11 +126,11 @@ def check_draft(context: str, answer: str, *, judge=None, strictness: str | None
 
 
 def apply_preshow(text: str, cited: list, context: str, *, enabled: bool, checker, refusal_text: str):
-    """Gate a draft. Returns text, cited, judge_pass, judge_reason, judge_decision.
+    """Пропустить черновик через судью. Возвращает текст, cited, judge_pass, причину, решение.
 
-    `checker(context, draft)` is called only when the draft would be shown:
-    the flag is on, there is at least one citation, and the text is not already
-    the refusal. A failed check replaces the draft with `refusal_text`.
+    `checker(context, draft)` вызывается только для черновика, который бот собирается показать:
+    флаг включён, есть хотя бы одна ссылка, текст ещё не отказ. Вердикт «нет» заменяет черновик
+    на `refusal_text`.
     """
     if not enabled or not cited or text == refusal_text:
         return text, cited, None, "", "skipped"
@@ -145,7 +145,7 @@ def is_case_9(question: str) -> bool:
 
 
 def example_is_trap(example: dict) -> bool:
-    """Close traps (`no_answer`), off-topic items, and hard-set `category=trap`."""
+    """Близкие ловушки (`no_answer`), посторонние темы и `category=trap` трудного набора."""
     if example.get("category") == "trap":
         return True
     return example.get("type") in {"no_answer", "off_topic"}
@@ -165,12 +165,13 @@ def _as_bool(value) -> bool:
 
 
 def summarize_rows(rows: list[dict]) -> dict:
-    """Pass rates before/after the judge, the near-threshold band, case 9, latency."""
+    """Доли до и после судьи, полоса около порога, срез type=answerable, случай 9, задержка."""
 
     def count(items, key):
         return sum(1 for row in items if _as_bool(row.get(key)))
 
     band = [row for row in rows if _as_bool(row.get("near_threshold"))]
+    band_answerable = [row for row in band if row.get("type") == "answerable"]
     case_rows = [row for row in rows if _as_bool(row.get("is_case_9"))]
     shown = [row for row in rows if _as_bool(row.get("passed_before_judge"))]
     rejected = [row for row in shown if not _as_bool(row.get("passed_after_judge"))]
@@ -211,6 +212,11 @@ def summarize_rows(rows: list[dict]) -> dict:
         "band_pass_after": share(count(band, "passed_after_judge"), len(band)),
         "band_pass_before_n": count(band, "passed_before_judge"),
         "band_pass_after_n": count(band, "passed_after_judge"),
+        "band_answerable_n": len(band_answerable),
+        "band_answerable_before": share(count(band_answerable, "passed_before_judge"), len(band_answerable)),
+        "band_answerable_after": share(count(band_answerable, "passed_after_judge"), len(band_answerable)),
+        "band_answerable_before_n": count(band_answerable, "passed_before_judge"),
+        "band_answerable_after_n": count(band_answerable, "passed_after_judge"),
         "shown_n": len(shown),
         "judge_rejected_n": len(rejected),
         "answerable_rejected_n": len(answerable_rejected),
