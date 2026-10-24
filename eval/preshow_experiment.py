@@ -193,15 +193,26 @@ def print_summary(dataset, rows):
         f"после {_share(stats['band_answerable_after_n'], stats['band_answerable_n'], stats['band_answerable_after'])}"
     )
     print(
-        "  судья отклонил показанные черновики: "
-        f"{stats['judge_rejected_n']} из {stats['shown_n']}, "
-        f"из них type=answerable: {stats['answerable_rejected_n']}"
+        "  судья отклонил любые показанные черновики: "
+        f"{stats['judge_rejected_n']} из {stats['shown_n']}"
+    )
+    print(
+        "  из них с ответом в документах: "
+        f"{stats['answerable_rejected_n']} из {stats['answerable_shown_n']}"
     )
     print(f"  случай 9: {stats['case_9']}")
     if stats["mean_latency_answer_s"] is not None:
         print(f"  средняя задержка ответа, с: {stats['mean_latency_answer_s']:.3f}")
+    if stats["median_latency_answer_s"] is not None:
+        print(f"  медиана задержки ответа, с: {stats['median_latency_answer_s']:.3f}")
+    if stats["max_latency_answer_s"] is not None:
+        print(f"  максимум задержки ответа, с: {stats['max_latency_answer_s']:.3f}")
     if stats["mean_latency_s"] is not None:
         print(f"  средняя задержка с судьёй, с: {stats['mean_latency_s']:.3f}")
+    if stats["median_latency_s"] is not None:
+        print(f"  медиана задержки с судьёй, с: {stats['median_latency_s']:.3f}")
+    if stats["max_latency_s"] is not None:
+        print(f"  максимум задержки с судьёй, с: {stats['max_latency_s']:.3f}")
     if stats["mean_judge_call_s"] is not None:
         print(f"  средняя задержка только вызова судьи, с: {stats['mean_judge_call_s']:.3f}")
     return stats

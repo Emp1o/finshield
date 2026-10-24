@@ -14,7 +14,7 @@ CASE_9_QUESTION = "Что делать, если у меня украли тел
 NEAR_SCORE_LOW = 0.05
 NEAR_SCORE_HIGH = 0.15
 
-# Абзац строгость. Чтобы ужесточить проверку, поставьте PRESHOW_STRICTNESS=verbatim
+# Абзац строгости. Чтобы ужесточить проверку, поставьте PRESHOW_STRICTNESS=verbatim
 # или замените текст STRICTNESS_SOFT.
 STRICTNESS_SOFT = (
     "Сверяй по смыслу, не дословно. Перефраз и краткий пересказ засчитываются, "
@@ -158,6 +158,17 @@ def in_near_band(top_score, low: float = NEAR_SCORE_LOW, high: float = NEAR_SCOR
     return low <= score <= high
 
 
+def _median(values: list[float]):
+    """Медиана. Пустой список — None. Чётная длина — среднее двух центральных."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    mid = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[mid]
+    return (ordered[mid - 1] + ordered[mid]) / 2
+
+
 def _as_bool(value) -> bool:
     if isinstance(value, str):
         return value.strip().lower() in {"1", "true", "yes", "да"}
@@ -175,6 +186,7 @@ def summarize_rows(rows: list[dict]) -> dict:
     case_rows = [row for row in rows if _as_bool(row.get("is_case_9"))]
     shown = [row for row in rows if _as_bool(row.get("passed_before_judge"))]
     rejected = [row for row in shown if not _as_bool(row.get("passed_after_judge"))]
+    answerable_shown = [row for row in shown if row.get("type") == "answerable"]
     answerable_rejected = [row for row in rejected if row.get("type") == "answerable"]
     latencies = []
     answer_latencies = []
@@ -219,6 +231,7 @@ def summarize_rows(rows: list[dict]) -> dict:
         "band_answerable_after_n": count(band_answerable, "passed_after_judge"),
         "shown_n": len(shown),
         "judge_rejected_n": len(rejected),
+        "answerable_shown_n": len(answerable_shown),
         "answerable_rejected_n": len(answerable_rejected),
         "case_9": case_label,
         "mean_latency_s": sum(latencies) / len(latencies) if latencies else None,
@@ -226,4 +239,8 @@ def summarize_rows(rows: list[dict]) -> dict:
             sum(answer_latencies) / len(answer_latencies) if answer_latencies else None
         ),
         "mean_judge_call_s": sum(judge_calls) / len(judge_calls) if judge_calls else None,
+        "median_latency_s": _median(latencies),
+        "median_latency_answer_s": _median(answer_latencies),
+        "max_latency_s": max(latencies) if latencies else None,
+        "max_latency_answer_s": max(answer_latencies) if answer_latencies else None,
     }

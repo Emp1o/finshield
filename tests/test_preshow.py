@@ -211,8 +211,13 @@ def test_summarize_before_after_band_and_case_9():
     assert stats["band_answerable_n"] == 1
     assert stats["band_answerable_before_n"] == 1
     assert stats["band_answerable_after_n"] == 0
+    assert stats["answerable_shown_n"] == 2
     assert stats["answerable_rejected_n"] == 1
     assert stats["judge_rejected_n"] == 2
+    assert stats["median_latency_s"] == pytest.approx(1.5)
+    assert stats["median_latency_answer_s"] == pytest.approx(0.9)
+    assert stats["max_latency_answer_s"] == pytest.approx(1.2)
+    assert stats["max_latency_s"] == pytest.approx(3.0)
     assert stats["case_9"] == "fail"
     assert stats["mean_latency_s"] == pytest.approx(1.55)
     assert stats["mean_latency_answer_s"] == pytest.approx(0.8)
