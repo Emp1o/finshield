@@ -50,3 +50,8 @@ JUDGE_MODEL = "GigaChat-2-Max"
 
 PROMPT_VERSION = "v3"
 REQUIRE_CITATIONS = True
+
+# Pre-show judge. Empty or unset keeps the current bot path.
+PRESHOW_JUDGE = os.getenv("PRESHOW_JUDGE", "").strip().lower() in {"1", "true", "yes", "on"}
+# soft: same meaning as the chunks. verbatim: near word-for-word.
+PRESHOW_STRICTNESS = os.getenv("PRESHOW_STRICTNESS", "soft").strip().lower() or "soft"

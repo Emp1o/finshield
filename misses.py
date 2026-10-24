@@ -20,7 +20,7 @@ for ex in EVAL:
 
 print("\n=== Refusal errors ===")
 for ex in EVAL:
-    result = answer(ex["question"])
+    result = answer(ex["question"], preshow_judge=False)
     refused = is_refusal(result)
     if ex["source"] and refused:
         print(f"\nFALSE REFUSAL (score {result['top_score']:.3f}): {ex['question']}")

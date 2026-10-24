@@ -82,7 +82,7 @@ def evaluate_answers():
     judge = get_judge()
     faithful, false_refusals, refusals, rows = [], [], [], []
     for ex in EVAL:
-        result = with_retry(answer, ex["question"])
+        result = with_retry(answer, ex["question"], preshow_judge=False)
         refused = is_refusal(result)
         row = {"question": ex["question"], "type": ex.get("type", ""),
        "refused": refused, "top_score": result.get("top_score"),
